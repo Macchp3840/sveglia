@@ -56,10 +56,17 @@ class AlarmPrefs(context: Context) {
             sp.edit().putBoolean("pending_ring", v).commit()
         }
 
-    /** Istante del controllo "sei sveglio?" in attesa, 0 se nessuno. */
+    /** Istante del controllo "sei sveglio?" in attesa o in corso (fino alla conferma), 0 se nessuno. */
     var wakeCheckAt: Long
         get() = sp.getLong("wake_check_at", 0L)
         set(v) {
             sp.edit().putLong("wake_check_at", v).commit()
+        }
+
+    /** Volume sveglia dell'utente prima che lo alzassimo, -1 se non toccato (sopravvive a un crash). */
+    var savedAlarmVolume: Int
+        get() = sp.getInt("saved_alarm_volume", -1)
+        set(v) {
+            sp.edit().putInt("saved_alarm_volume", v).commit()
         }
 }

@@ -21,10 +21,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 AlarmService.start(context, AlarmService.ACTION_RING)
             }
             ACTION_RING_NOW -> AlarmService.start(context, AlarmService.ACTION_RING)
-            ACTION_WAKE_CHECK -> {
-                AlarmPrefs(context).wakeCheckAt = 0L
-                AlarmService.start(context, AlarmService.ACTION_CHECK)
-            }
+            // wakeCheckAt resta impostato finché non confermi: se il telefono si riavvia, il controllo riparte.
+            ACTION_WAKE_CHECK -> AlarmService.start(context, AlarmService.ACTION_CHECK)
         }
     }
 }

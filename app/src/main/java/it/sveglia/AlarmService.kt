@@ -66,7 +66,13 @@ class AlarmService : Service() {
     private var player: MediaPlayer? = null
     private var tone: ToneGenerator? = null
     private var vibrator: Vibrator? = null
-    private var savedVolume = -1
+
+    // I timer del Handler si fermano se la CPU dorme: senza questo i 60 s del controllo potrebbero non scadere.
+    private val wakeLock by lazy {
+        getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "sveglia:alarm")
+            .apply { setReferenceCounted(false) }
+    }
 
     private val enforceVolume = object : Runnable {
         override fun run() {
@@ -96,17 +102,26 @@ class AlarmService : Service() {
             ACTION_RING -> startRinging()
             ACTION_CHECK -> if (mode == Mode.RINGING) goForeground() else startCheck()
             ACTION_MISSIONS_DONE -> finishRinging()
-            ACTION_AWAKE_CONFIRMED -> if (mode == Mode.CHECKING) stopEverything() else if (mode == Mode.IDLE) stopSelf()
+            ACTION_AWAKE_CONFIRMED -> if (mode == Mode.CHECKING) {
+                AlarmScheduler.cancelWakeCheck(this)
+                stopEverything()
+            } else if (mode == Mode.IDLE) {
+                stopSelf()
+            }
             null -> {
-                // Riavviato dal sistema dopo essere stato ucciso: se suonava, riprende.
-                if (AlarmPrefs(this).pendingRing) {
-                    try {
-                        startRinging()
-                    } catch (_: Exception) {
-                        AlarmScheduler.ringIn(this, 3_000)
-                        stopSelf()
+                // Riavviato dal sistema dopo essere stato ucciso: se suonava o stava controllando, riprende.
+                val prefs = AlarmPrefs(this)
+                try {
+                    when {
+                        prefs.pendingRing -> startRinging()
+                        prefs.wakeCheckAt in 1..System.currentTimeMillis() -> startCheck()
+                        else -> stopSelf()
                     }
-                } else {
+                } catch (_: Exception) {
+                    // Da qui il sistema può vietare il primo piano: ci riprova un allarme esatto, che lo consente.
+                    // mode va azzerato, altrimenti al nuovo avvio startRinging() crede di suonare già e resta muta.
+                    mode = Mode.IDLE
+                    if (prefs.pendingRing) AlarmScheduler.ringIn(this, 3_000) else AlarmScheduler.scheduleFromPrefs(this)
                     stopSelf()
                 }
             }
@@ -120,10 +135,13 @@ class AlarmService : Service() {
         AlarmPrefs(this).pendingRing = true
         handler.removeCallbacks(escalate)
         goForeground()
+        // Il controllo in corso o in attesa è superato: se ne pianifica uno nuovo a missioni finite.
+        AlarmScheduler.cancelWakeCheck(this)
         if (!wasRinging) {
             MissionState.reset()
             stopTone()
-            if (savedVolume < 0) savedVolume = audio.getStreamVolume(AudioManager.STREAM_ALARM)
+            val prefs = AlarmPrefs(this)
+            if (prefs.savedAlarmVolume < 0) prefs.savedAlarmVolume = audio.getStreamVolume(AudioManager.STREAM_ALARM)
             startSound()
             startVibration()
             handler.post(enforceVolume)
@@ -136,6 +154,7 @@ class AlarmService : Service() {
         checkDeadline = System.currentTimeMillis() + CHECK_TIMEOUT_MS
         goForeground()
         startToneLoop(ToneGenerator.TONE_PROP_BEEP2, volume = 70, everyMs = 2_000)
+        handler.removeCallbacks(escalate)
         handler.postDelayed(escalate, CHECK_TIMEOUT_MS)
         launchUi()
     }
@@ -155,20 +174,23 @@ class AlarmService : Service() {
         mode = Mode.IDLE
         handler.removeCallbacksAndMessages(null)
         releaseMedia()
-        if (savedVolume >= 0) {
+        val prefs = AlarmPrefs(this)
+        if (prefs.savedAlarmVolume >= 0) {
             try {
-                audio.setStreamVolume(AudioManager.STREAM_ALARM, savedVolume, 0)
+                audio.setStreamVolume(AudioManager.STREAM_ALARM, prefs.savedAlarmVolume, 0)
             } catch (_: SecurityException) {
             }
-            savedVolume = -1
+            prefs.savedAlarmVolume = -1
         }
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        if (wakeLock.isHeld) wakeLock.release()
         stopSelf()
     }
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         releaseMedia()
+        if (wakeLock.isHeld) wakeLock.release()
         super.onDestroy()
     }
 
@@ -261,6 +283,8 @@ class AlarmService : Service() {
     private fun goForeground() {
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK else 0
         ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
+        // shortcut: tetto di 1 ora, oltre la CPU resta sveglia solo grazie al MediaPlayer.
+        wakeLock.acquire(60 * 60_000L)
     }
 
     private fun buildNotification(): Notification {
