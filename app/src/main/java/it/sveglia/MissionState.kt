@@ -24,9 +24,10 @@ object MissionState {
     }
 
     fun newProblem() {
-        val a = Random.nextInt(12, 50)
+        // Tabellina + piccola somma (es. 7 × 8 + 6): fattibile appena svegli, ma serve ragionare.
+        val a = Random.nextInt(3, 10)
         val b = Random.nextInt(3, 10)
-        val c = Random.nextInt(11, 100)
+        val c = Random.nextInt(2, 20)
         problemText = "$a × $b + $c"
         problemAnswer = a * b + c
     }
