@@ -1,187 +1,349 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:id="@+id/root"
+    android:background="@color/board"
+    android:orientation="vertical">
 
+    <!-- Testata del tabellone -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            style="@style/Board.Label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontVariationSettings="'wght' 800"
+            android:text="Partenze · Sveglia Dura"
+            android:textSize="15sp" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/enabledSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:contentDescription="Sveglia attiva" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/signal" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:id="@+id/warningBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/warning_bg"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/warningText"
+                    style="@style/Board.RowText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="15sp" />
+
+                <Button
+                    android:id="@+id/fixButton"
+                    style="@style/Board.Button.Outlined"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="Risolvi" />
+            </LinearLayout>
+
+            <!-- Rullo ore : minuti -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <it.sveglia.WheelPicker
+                    android:id="@+id/hourWheel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="2dp"
+                    android:fontVariationSettings="'wdth' 75, 'wght' 800"
+                    android:importantForAccessibility="no"
+                    android:includeFontPadding="false"
+                    android:text=":"
+                    android:textColor="@color/signal"
+                    android:textSize="60sp" />
+
+                <it.sveglia.WheelPicker
+                    android:id="@+id/minuteWheel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/statusText"
+                style="@style/Board.Label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:accessibilityLiveRegion="polite"
+                android:gravity="center"
+                android:textColor="@color/ink" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Board.Label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Giorni" />
+
+                <TextView
+                    style="@style/Board.Sub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nessuno = una volta sola" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/daysRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal" />
+
+            <TextView
+                style="@style/Board.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="36dp"
+                android:text="Per spegnerla" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/tile" />
+
+            <LinearLayout
+                android:id="@+id/mathRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Board.Label"
+                    android:layout_width="56dp"
+                    android:layout_height="wrap_content"
+                    android:importantForAccessibility="no"
+                    android:text="Bin 1" />
+
+                <CheckBox
+                    android:id="@+id/mathCheck"
+                    style="@style/Board.Mission"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Calcoli" />
+
+                <EditText
+                    android:id="@+id/mathCount"
+                    style="@style/Board.Count"
+                    android:contentDescription="Quanti calcoli"
+                    android:maxLength="2" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/tile" />
+
+            <LinearLayout
+                android:id="@+id/shakeRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Board.Label"
+                    android:layout_width="56dp"
+                    android:layout_height="wrap_content"
+                    android:importantForAccessibility="no"
+                    android:text="Bin 2" />
+
+                <CheckBox
+                    android:id="@+id/shakeCheck"
+                    style="@style/Board.Mission"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Scuoti il telefono" />
+
+                <EditText
+                    android:id="@+id/shakeCount"
+                    style="@style/Board.Count"
+                    android:contentDescription="Quante scosse"
+                    android:maxLength="3" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/tile" />
+
+            <LinearLayout
+                android:id="@+id/barcodeRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="64dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Board.Label"
+                        android:layout_width="56dp"
+                        android:layout_height="wrap_content"
+                        android:importantForAccessibility="no"
+                        android:text="Bin 3" />
+
+                    <CheckBox
+                        android:id="@+id/barcodeCheck"
+                        style="@style/Board.Mission"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Codice lontano dal letto" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="56dp">
+
+                    <TextView
+                        android:id="@+id/barcodeLabel"
+                        style="@style/Board.Sub"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="12dp" />
+
+                    <Button
+                        android:id="@+id/barcodeButton"
+                        style="@style/Board.Button.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Registra" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/tile" />
+
+            <LinearLayout
+                android:id="@+id/wakeRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Board.Label"
+                    android:layout_width="56dp"
+                    android:layout_height="wrap_content"
+                    android:importantForAccessibility="no"
+                    android:text="Ctrl" />
+
+                <CheckBox
+                    android:id="@+id/wakeCheck"
+                    style="@style/Board.Mission"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Sei sveglio? Dopo (min)" />
+
+                <EditText
+                    android:id="@+id/wakeDelay"
+                    style="@style/Board.Count"
+                    android:contentDescription="Minuti prima del controllo"
+                    android:maxLength="2" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/tile" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Comandi fissi in basso -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/board"
         android:orientation="vertical"
-        android:padding="20dp">
-
-        <TextView
-            android:id="@+id/warningText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#33D32F2F"
-            android:padding="12dp"
-            android:textSize="15sp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/fixButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Risolvi"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/timeButton"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="64sp"
-            android:textStyle="bold" />
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/enabledSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sveglia attiva"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textSize="14sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Ripeti (nessun giorno = una volta sola)"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:id="@+id/daysRow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Missioni per spegnerla"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <CheckBox
-                android:id="@+id/mathCheck"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Calcoli (quanti)" />
-
-            <EditText
-                android:id="@+id/mathCount"
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:inputType="number"
-                android:maxLength="2" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <CheckBox
-                android:id="@+id/shakeCheck"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Scuoti il telefono (volte)" />
-
-            <EditText
-                android:id="@+id/shakeCount"
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:inputType="number"
-                android:maxLength="3" />
-        </LinearLayout>
-
-        <CheckBox
-            android:id="@+id/barcodeCheck"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Scansiona un codice a barre / QR lontano dal letto" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="32dp">
-
-            <TextView
-                android:id="@+id/barcodeLabel"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="13sp" />
-
-            <Button
-                android:id="@+id/barcodeButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Registra codice" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Anti-ricaduta"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <CheckBox
-                android:id="@+id/wakeCheck"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Controlla che sia sveglio dopo (minuti)" />
-
-            <EditText
-                android:id="@+id/wakeDelay"
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:inputType="number"
-                android:maxLength="2" />
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/saveButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Salva" />
+        android:paddingHorizontal="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="16dp">
 
         <Button
             android:id="@+id/testButton"
+            style="@style/Board.Button.Text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Prova: suona tra 10 secondi" />
+
+        <Button
+            android:id="@+id/saveButton"
+            style="@style/Board.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salva" />
     </LinearLayout>
-</ScrollView>
+</LinearLayout>

@@ -1,14 +1,130 @@
 <resources>
-    <color name="accent">#FFD32F2F</color>
-    <color name="alarm_bg">#FFB71C1C</color>
+    <!-- Tabellone partenze: lamiera nera, tessere grigie, giallo segnaletico per ciò che è attivo. -->
+    <color name="board">#FF111111</color>
+    <color name="tile">#FF2A2A2A</color>
+    <color name="ink">#FFF2F2EE</color>
+    <color name="ink_dim">#FF8A8A85</color>
+    <color name="ink_off">#FF55554F</color>
+    <color name="signal">#FFF5C400</color>
+    <color name="late">#FFE5484D</color>
 
-    <style name="Theme.Sveglia" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/accent</item>
-        <item name="colorAccent">@color/accent</item>
+    <style name="Theme.Sveglia" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/signal</item>
+        <item name="colorOnPrimary">@color/board</item>
+        <item name="colorPrimaryContainer">@color/tile</item>
+        <item name="colorOnPrimaryContainer">@color/signal</item>
+        <item name="colorSecondary">@color/signal</item>
+        <item name="colorOnSecondary">@color/board</item>
+        <item name="colorSurface">@color/board</item>
+        <item name="colorOnSurface">@color/ink</item>
+        <item name="colorOnSurfaceVariant">@color/ink_dim</item>
+        <item name="colorSurfaceContainerHighest">@color/tile</item>
+        <item name="colorOutline">@color/ink_off</item>
+        <item name="colorError">@color/late</item>
+        <item name="colorSurfaceInverse">@color/ink</item>
+        <item name="colorOnSurfaceInverse">@color/board</item>
+        <item name="colorPrimaryInverse">#FF7A6200</item>
+        <item name="android:colorBackground">@color/board</item>
+        <item name="android:windowBackground">@color/board</item>
+        <!-- Il tema è già scuro: One UI non deve "scurirlo" di nuovo schiarendo i testi neri sul giallo. -->
+        <item name="android:forceDarkAllowed">false</item>
+        <item name="android:textColorHighlight">#66F5C400</item>
+        <item name="android:textColorHint">@color/ink_off</item>
+        <item name="fontFamily">@font/archivo</item>
+        <item name="android:fontFamily">@font/archivo</item>
     </style>
 
-    <style name="Theme.Sveglia.Alarm" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorAccent">#FFFFFFFF</item>
-        <item name="android:windowBackground">@color/alarm_bg</item>
+    <!-- Etichetta di riga del tabellone (BIN 1, GIORNI, PROSSIMA PARTENZA...) -->
+    <style name="Board.Label" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/signal</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:fontVariationSettings">"'wght' 700"</item>
+    </style>
+
+    <style name="Board.Label.Dim">
+        <item name="android:textColor">@color/ink_dim</item>
+    </style>
+
+    <style name="Board.RowText" parent="">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:fontVariationSettings">"'wght' 600"</item>
+    </style>
+
+    <style name="Board.Sub" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/ink_dim</item>
+    </style>
+
+    <!-- Numero su tessera a palette -->
+    <style name="Board.Flap" parent="">
+        <item name="android:background">@drawable/tile</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:fontVariationSettings">"'wdth' 75, 'wght' 800"</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- Contatore modificabile (quanti calcoli, quante scosse, minuti) -->
+    <style name="Board.Count" parent="">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/tile_input</item>
+        <item name="android:gravity">center</item>
+        <item name="android:inputType">number</item>
+        <item name="android:selectAllOnFocus">true</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/signal</item>
+        <item name="android:fontVariationSettings">"'wdth' 75, 'wght' 800"</item>
+    </style>
+
+    <style name="Board.Day" parent="">
+        <!-- Senza parent di sistema vanno dichiarati: altrimenti il giorno non si accende al tocco. -->
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:button">@null</item>
+        <item name="android:background">@drawable/day_bg</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/day_text</item>
+        <item name="android:fontVariationSettings">"'wght' 800"</item>
+    </style>
+
+    <style name="Board.Mission" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:fontVariationSettings">"'wght' 600"</item>
+    </style>
+
+    <style name="Board.Button" parent="Widget.Material3.Button">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textColor">@color/board</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:fontVariationSettings">"'wght' 800"</item>
+        <item name="shapeAppearance">@style/Board.Shape</item>
+    </style>
+
+    <style name="Board.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textColor">@color/signal</item>
+        <item name="strokeColor">@color/signal</item>
+        <item name="android:fontVariationSettings">"'wght' 700"</item>
+        <item name="shapeAppearance">@style/Board.Shape</item>
+    </style>
+
+    <style name="Board.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textColor">@color/ink_dim</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="Board.Shape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">6dp</item>
     </style>
 </resources>

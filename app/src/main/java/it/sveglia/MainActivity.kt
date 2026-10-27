@@ -2,7 +2,6 @@ package it.sveglia
 
 import android.Manifest
 import android.app.NotificationManager
-import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -11,20 +10,32 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.text.format.DateFormat
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.snackbar.Snackbar
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
-import java.util.Date
+import java.util.Calendar
+
+/** Disegna sotto le barre di sistema (obbligatorio da Android 15) e lascia spazio a barre e tastiera. */
+fun AppCompatActivity.padForSystemBars() {
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { v, insets ->
+        val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
+        v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+        insets
+    }
+}
 
 class MainActivity : AppCompatActivity() {
     private lateinit var prefs: AlarmPrefs
@@ -33,11 +44,14 @@ class MainActivity : AppCompatActivity() {
     private var minute = 0
     private var barcodeValue: String? = null
 
-    private lateinit var timeButton: Button
-    private lateinit var enabledSwitch: SwitchCompat
+    private lateinit var hourWheel: WheelPicker
+    private lateinit var minuteWheel: WheelPicker
+    private lateinit var enabledSwitch: MaterialSwitch
     private lateinit var statusText: TextView
+    private lateinit var warningBox: View
     private lateinit var warningText: TextView
     private lateinit var fixButton: Button
+    private lateinit var saveButton: Button
     private val dayChecks = mutableListOf<CheckBox>()
     private lateinit var mathCheck: CheckBox
     private lateinit var mathCount: EditText
@@ -54,13 +68,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        padForSystemBars()
         prefs = AlarmPrefs(this)
 
-        timeButton = findViewById(R.id.timeButton)
+        hourWheel = findViewById(R.id.hourWheel)
+        minuteWheel = findViewById(R.id.minuteWheel)
         enabledSwitch = findViewById(R.id.enabledSwitch)
         statusText = findViewById(R.id.statusText)
+        warningBox = findViewById(R.id.warningBox)
         warningText = findViewById(R.id.warningText)
         fixButton = findViewById(R.id.fixButton)
+        saveButton = findViewById(R.id.saveButton)
         mathCheck = findViewById(R.id.mathCheck)
         mathCount = findViewById(R.id.mathCount)
         shakeCheck = findViewById(R.id.shakeCheck)
@@ -70,33 +88,47 @@ class MainActivity : AppCompatActivity() {
         wakeCheck = findViewById(R.id.wakeCheck)
         wakeDelay = findViewById(R.id.wakeDelay)
 
+        hourWheel.count = 24
+        hourWheel.label = "Ore"
+        hourWheel.onValueChanged = { hour = it; renderStatus() }
+        minuteWheel.count = 60
+        minuteWheel.label = "Minuti"
+        minuteWheel.onValueChanged = { minute = it; renderStatus() }
+
         val daysRow = findViewById<LinearLayout>(R.id.daysRow)
-        listOf("L", "M", "M", "G", "V", "S", "D").forEach { label ->
-            val cb = CheckBox(this).apply { text = label }
-            daysRow.addView(cb, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            dayChecks += cb
-        }
+        val gap = (6 * resources.displayMetrics.density).toInt()
+        listOf("L" to "Lunedì", "M" to "Martedì", "M" to "Mercoledì", "G" to "Giovedì", "V" to "Venerdì", "S" to "Sabato", "D" to "Domenica")
+            .forEachIndexed { i, (label, name) ->
+                val cb = CheckBox(this, null, 0, R.style.Board_Day).apply {
+                    text = label
+                    contentDescription = name
+                    setOnCheckedChangeListener { _, _ -> renderStatus() }
+                }
+                daysRow.addView(cb, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    if (i > 0) marginStart = gap
+                })
+                dayChecks += cb
+            }
 
         if (sensorsMissingAccelerometer()) {
             shakeCheck.isEnabled = false
-            shakeCheck.text = "Scuoti il telefono (sensore assente)"
+            shakeCheck.text = "Scuoti (sensore assente)"
         }
 
         loadFromPrefs()
 
-        timeButton.setOnClickListener {
-            TimePickerDialog(this, { _, h, m ->
-                hour = h
-                minute = m
-                renderTime()
-            }, hour, minute, DateFormat.is24HourFormat(this)).show()
-        }
+        enabledSwitch.setOnCheckedChangeListener { _, _ -> renderStatus() }
+        bindRow(mathCheck, R.id.mathRow, mathCount)
+        bindRow(shakeCheck, R.id.shakeRow, shakeCount)
+        bindRow(barcodeCheck, R.id.barcodeRow, null)
+        bindRow(wakeCheck, R.id.wakeRow, wakeDelay)
+
         findViewById<Button>(R.id.barcodeButton).setOnClickListener { registerBarcode() }
-        findViewById<Button>(R.id.saveButton).setOnClickListener { save() }
+        saveButton.setOnClickListener { save() }
         findViewById<Button>(R.id.testButton).setOnClickListener {
             if (save()) {
                 AlarmScheduler.ringIn(this, 10_000)
-                Toast.makeText(this, "Suonerà tra 10 secondi: blocca pure lo schermo", Toast.LENGTH_LONG).show()
+                say("Suonerà tra 10 secondi: blocca pure lo schermo")
             }
         }
 
@@ -118,6 +150,17 @@ class MainActivity : AppCompatActivity() {
         renderStatus()
     }
 
+    /** Missione spenta = riga in penombra, contatore non modificabile. */
+    private fun bindRow(check: CheckBox, rowId: Int, count: EditText?) {
+        val row = findViewById<View>(rowId)
+        val apply = { on: Boolean ->
+            row.alpha = if (on) 1f else 0.45f
+            count?.isEnabled = on
+        }
+        apply(check.isChecked)
+        check.setOnCheckedChangeListener { _, on -> apply(on) }
+    }
+
     private fun sensorsMissingAccelerometer(): Boolean =
         getSystemService(SensorManager::class.java).getDefaultSensor(Sensor.TYPE_ACCELEROMETER) == null
 
@@ -134,27 +177,34 @@ class MainActivity : AppCompatActivity() {
         barcodeCheck.isChecked = prefs.barcodeEnabled
         wakeCheck.isChecked = prefs.wakeCheckEnabled
         wakeDelay.setText(prefs.wakeCheckDelayMin.toString())
-        renderTime()
+        hourWheel.value = hour
+        minuteWheel.value = minute
         renderBarcode()
     }
 
-    private fun renderTime() {
-        timeButton.text = String.format("%02d:%02d", hour, minute)
-    }
-
     private fun renderBarcode() {
-        barcodeLabel.text = barcodeValue?.let { "Registrato: ${it.take(30)}" }
-            ?: "Nessun codice. Usa ad es. il dentifricio o un QR attaccato in bagno."
+        barcodeLabel.text = barcodeValue?.let { "Registrato: ${it.take(24)}" }
+            ?: "Es. il dentifricio o un QR attaccato in bagno"
     }
 
+    private fun uiDays(): Int = dayChecks.foldIndexed(0) { i, acc, cb -> if (cb.isChecked) acc or (1 shl i) else acc }
+
+    /** Cosa succederà con le impostazioni sullo schermo, anche prima di salvare. */
     private fun renderStatus() {
-        statusText.text = if (prefs.enabled) {
-            val next = AlarmScheduler.nextTrigger(prefs.hour, prefs.minute, prefs.days)
-            val fmt = DateFormat.getMediumDateFormat(this).format(Date(next)) + " " + DateFormat.getTimeFormat(this).format(Date(next))
-            "Prossima sveglia: $fmt"
-        } else {
-            "Sveglia disattivata"
+        if (!enabledSwitch.isChecked) {
+            statusText.text = "Spenta · accendila in alto"
+            statusText.setTextColor(ContextCompat.getColor(this, R.color.ink_dim))
+            return
         }
+        val next = AlarmScheduler.nextTrigger(hour, minute, uiDays())
+        val cal = Calendar.getInstance().apply { timeInMillis = next }
+        val day = listOf("dom", "lun", "mar", "mer", "gio", "ven", "sab")[cal.get(Calendar.DAY_OF_WEEK) - 1]
+        val mins = ((next - System.currentTimeMillis() + 59_999) / 60_000).toInt()
+        val wait = if (mins >= 60) "${mins / 60} h ${mins % 60}" else "$mins min"
+        val unsaved = hour != prefs.hour || minute != prefs.minute || uiDays() != prefs.days || !prefs.enabled
+        statusText.text = "Suona $day %02d:%02d · tra $wait".format(hour, minute) +
+            if (unsaved) " · premi Salva" else ""
+        statusText.setTextColor(ContextCompat.getColor(this, if (unsaved) R.color.signal else R.color.ink))
     }
 
     private fun registerBarcode() {
@@ -162,17 +212,19 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener { barcode ->
                 val value = barcode.rawValue
                 if (value.isNullOrEmpty()) {
-                    Toast.makeText(this, "Codice vuoto, riprova", Toast.LENGTH_SHORT).show()
+                    say("Codice vuoto, riprova")
                 } else {
                     barcodeValue = value
                     barcodeCheck.isChecked = true
                     renderBarcode()
-                    Toast.makeText(this, "Codice registrato: ricordati di premere Salva", Toast.LENGTH_SHORT).show()
+                    say("Codice registrato: ricordati di premere Salva")
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Scansione non riuscita: ${it.message}", Toast.LENGTH_LONG).show()
-            }
+            .addOnFailureListener { say("Scansione non riuscita: ${it.message}") }
+    }
+
+    private fun say(message: String) {
+        Snackbar.make(saveButton, message, Snackbar.LENGTH_LONG).setAnchorView(saveButton).show()
     }
 
     private fun readInt(field: EditText, min: Int, max: Int, fallback: Int): Int =
@@ -181,17 +233,17 @@ class MainActivity : AppCompatActivity() {
     /** Salva e ripianifica. Restituisce false se la configurazione non è valida. */
     private fun save(): Boolean {
         if (!mathCheck.isChecked && !shakeCheck.isChecked && !barcodeCheck.isChecked) {
-            Toast.makeText(this, "Scegli almeno una missione", Toast.LENGTH_LONG).show()
+            say("Scegli almeno una missione")
             return false
         }
         if (barcodeCheck.isChecked && barcodeValue == null) {
-            Toast.makeText(this, "Registra prima un codice da scansionare", Toast.LENGTH_LONG).show()
+            say("Registra prima un codice da scansionare")
             return false
         }
         prefs.hour = hour
         prefs.minute = minute
         prefs.enabled = enabledSwitch.isChecked
-        prefs.days = dayChecks.foldIndexed(0) { i, acc, cb -> if (cb.isChecked) acc or (1 shl i) else acc }
+        prefs.days = uiDays()
         prefs.mathEnabled = mathCheck.isChecked
         prefs.mathCount = readInt(mathCount, 1, 20, 3)
         prefs.shakeEnabled = shakeCheck.isChecked
@@ -201,11 +253,12 @@ class MainActivity : AppCompatActivity() {
         prefs.wakeCheckEnabled = wakeCheck.isChecked
         prefs.wakeCheckDelayMin = readInt(wakeDelay, 1, 30, 5)
         loadFromPrefs()
+        currentFocus?.clearFocus()
 
         AlarmScheduler.scheduleFromPrefs(this)
         renderStatus()
         updateWarnings()
-        Toast.makeText(this, "Salvato", Toast.LENGTH_SHORT).show()
+        say("Salvato")
         return true
     }
 
@@ -228,12 +281,10 @@ class MainActivity : AppCompatActivity() {
             else -> null
         }
         if (problem == null) {
-            warningText.visibility = View.GONE
-            fixButton.visibility = View.GONE
+            warningBox.visibility = View.GONE
         } else {
             warningText.text = problem.first
-            warningText.visibility = View.VISIBLE
-            fixButton.visibility = View.VISIBLE
+            warningBox.visibility = View.VISIBLE
             fixButton.setOnClickListener {
                 try {
                     startActivity(problem.second)

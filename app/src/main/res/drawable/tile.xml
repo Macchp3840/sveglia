@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tessera a palette: due metà con la linea di taglio al centro. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <solid android:color="@color/tile" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+    <item android:gravity="center_vertical|fill_horizontal" android:height="2dp">
+        <shape>
+            <solid android:color="@color/board" />
+        </shape>
+    </item>
+</layer-list>
