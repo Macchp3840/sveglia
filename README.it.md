@@ -35,14 +35,16 @@ Font: [Archivo](https://github.com/Omnibus-Type/Archivo) (SIL Open Font License 
 
 ## Installazione
 
-Ogni push compila l'app con GitHub Actions (workflow `Build APK`). Apri la scheda **Actions**, scegli l'ultima esecuzione e scarica l'artifact `sveglia-debug-apk`, poi installalo sul telefono (va consentita l'installazione da origini sconosciute).
+Scarica `sveglia-dura-vX.Y.Z.apk` dall'[ultima release](https://github.com/Macchp3840/sveglia/releases/latest) e aprilo sul telefono. La prima volta Android ti chiede di consentire le installazioni da quella fonte (il browser o il file manager). Le release successive sono firmate con la stessa chiave, quindi si installano sopra la versione vecchia e le impostazioni restano.
 
-Per compilare in locale servono JDK 17 e l'SDK Android:
+Per compilarla da solo servono JDK 17 e l'SDK Android:
 
 ```bash
 ./gradlew assembleDebug
 # APK in app/build/outputs/apk/debug/
 ```
+
+Ogni push lancia anche il workflow `Build APK`, che salva un APK di debug come artifact di GitHub Actions. Un tag come `v1.2.0` lancia `Release APK`, che compila l'APK firmato e lo allega a una release.
 
 Requisiti: Android 8.0 o successivo. Per la scansione dei codici servono i Google Play Services.
 

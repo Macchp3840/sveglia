@@ -35,14 +35,16 @@ Font: [Archivo](https://github.com/Omnibus-Type/Archivo) (SIL Open Font License 
 
 ## Install
 
-Every push builds the app with GitHub Actions (`Build APK` workflow). Open the **Actions** tab, pick the latest run and download the `sveglia-debug-apk` artifact, then install it on your phone (allow installing from unknown sources).
+Download `sveglia-dura-vX.Y.Z.apk` from the [latest release](https://github.com/Macchp3840/sveglia/releases/latest) and open it on your phone. Android will ask you to allow installs from that source (your browser or file manager) the first time. Later releases are signed with the same key, so they install over the old version and keep your settings.
 
-To build locally you need JDK 17 and the Android SDK:
+To build it yourself you need JDK 17 and the Android SDK:
 
 ```bash
 ./gradlew assembleDebug
 # APK in app/build/outputs/apk/debug/
 ```
+
+Every push also runs the `Build APK` workflow, which keeps a debug APK as a GitHub Actions artifact. A tag like `v1.2.0` runs `Release APK`, which builds the signed APK and attaches it to a release.
 
 Requirements: Android 8.0 or newer. Barcode scanning needs Google Play Services.
 
