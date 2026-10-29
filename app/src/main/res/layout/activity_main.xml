@@ -20,14 +20,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontVariationSettings="'wght' 800"
-            android:text="Partenze · Sveglia Dura"
+            android:text="@string/board_title"
             android:textSize="15sp" />
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/enabledSwitch"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
-            android:contentDescription="Sveglia attiva" />
+            android:contentDescription="@string/alarm_on" />
     </LinearLayout>
 
     <View
@@ -72,7 +72,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Risolvi" />
+                    android:text="@string/fix" />
             </LinearLayout>
 
             <!-- Rullo ore : minuti -->
@@ -127,13 +127,13 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Giorni" />
+                    android:text="@string/days" />
 
                 <TextView
                     style="@style/Board.Sub"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nessuno = una volta sola" />
+                    android:text="@string/days_none" />
             </LinearLayout>
 
             <LinearLayout
@@ -148,7 +148,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="36dp"
-                android:text="Per spegnerla" />
+                android:text="@string/to_stop" />
 
             <View
                 android:layout_width="match_parent"
@@ -169,7 +169,7 @@
                     android:layout_width="56dp"
                     android:layout_height="wrap_content"
                     android:importantForAccessibility="no"
-                    android:text="Bin 1" />
+                    android:text="@string/plat1" />
 
                 <CheckBox
                     android:id="@+id/mathCheck"
@@ -177,12 +177,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Calcoli" />
+                    android:text="@string/math" />
 
                 <EditText
                     android:id="@+id/mathCount"
                     style="@style/Board.Count"
-                    android:contentDescription="Quanti calcoli"
+                    android:contentDescription="@string/math_count"
                     android:maxLength="2" />
             </LinearLayout>
 
@@ -204,7 +204,7 @@
                     android:layout_width="56dp"
                     android:layout_height="wrap_content"
                     android:importantForAccessibility="no"
-                    android:text="Bin 2" />
+                    android:text="@string/plat2" />
 
                 <CheckBox
                     android:id="@+id/shakeCheck"
@@ -212,12 +212,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Scuoti il telefono" />
+                    android:text="@string/shake" />
 
                 <EditText
                     android:id="@+id/shakeCount"
                     style="@style/Board.Count"
-                    android:contentDescription="Quante scosse"
+                    android:contentDescription="@string/shake_count"
                     android:maxLength="3" />
             </LinearLayout>
 
@@ -245,7 +245,7 @@
                         android:layout_width="56dp"
                         android:layout_height="wrap_content"
                         android:importantForAccessibility="no"
-                        android:text="Bin 3" />
+                        android:text="@string/plat3" />
 
                     <CheckBox
                         android:id="@+id/barcodeCheck"
@@ -253,7 +253,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Codice lontano dal letto" />
+                        android:text="@string/barcode" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -276,7 +276,7 @@
                         style="@style/Board.Button.Outlined"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Registra" />
+                        android:text="@string/register" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -298,7 +298,7 @@
                     android:layout_width="56dp"
                     android:layout_height="wrap_content"
                     android:importantForAccessibility="no"
-                    android:text="Ctrl" />
+                    android:text="@string/ctrl" />
 
                 <CheckBox
                     android:id="@+id/wakeCheck"
@@ -306,12 +306,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Sei sveglio? Dopo (min)" />
+                    android:text="@string/wake_check" />
 
                 <EditText
                     android:id="@+id/wakeDelay"
                     style="@style/Board.Count"
-                    android:contentDescription="Minuti prima del controllo"
+                    android:contentDescription="@string/wake_delay"
                     android:maxLength="2" />
             </LinearLayout>
 
@@ -337,13 +337,13 @@
             style="@style/Board.Button.Text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Prova: suona tra 10 secondi" />
+            android:text="@string/test" />
 
         <Button
             android:id="@+id/saveButton"
             style="@style/Board.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Salva" />
+            android:text="@string/save" />
     </LinearLayout>
 </LinearLayout>

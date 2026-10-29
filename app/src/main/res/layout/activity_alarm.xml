@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontVariationSettings="'wght' 800"
-            android:text="In partenza"
+            android:text="@string/header_departing"
             android:textColor="@color/board"
             android:textSize="15sp" />
 
@@ -120,7 +120,7 @@
                     style="@style/Board.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Conferma" />
+                    android:text="@string/confirm" />
             </LinearLayout>
 
             <!-- Scuoti -->
@@ -165,14 +165,14 @@
                     style="@style/Board.Button.Text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Non trovo il codice: 8 calcoli al suo posto" />
+                    android:text="@string/code_lost" />
 
                 <Button
                     android:id="@+id/barcodeScan"
                     style="@style/Board.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Scansiona il codice" />
+                    android:text="@string/scan_code" />
             </LinearLayout>
 
             <!-- Controllo "sei sveglio?" -->
@@ -200,7 +200,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Secondi per confermare" />
+                    android:text="@string/seconds_to_confirm" />
 
                 <Space
                     android:layout_width="match_parent"
@@ -212,7 +212,7 @@
                     style="@style/Board.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Sono sveglio" />
+                    android:text="@string/im_awake" />
             </LinearLayout>
 
             <!-- Sopra i pannelli, senza rubare spazio: conta quando c'è la tastiera. -->

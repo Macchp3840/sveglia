@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.media.ToneGenerator
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -50,9 +51,14 @@ class AlarmService : Service() {
         var checkDeadline = 0L
             private set
 
-        /** Per gli allarmi in arrivo (anche con l'app in background). */
-        fun start(context: Context, action: String) {
-            ContextCompat.startForegroundService(context, Intent(context, AlarmService::class.java).setAction(action))
+        private const val EXTRA_RAMP_UNTIL = "ramp_until"
+
+        /** Per gli allarmi in arrivo (anche con l'app in background). [rampUntil]: ora esatta della sveglia, il volume sale fin lì. */
+        fun start(context: Context, action: String, rampUntil: Long = 0L) {
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, AlarmService::class.java).setAction(action).putExtra(EXTRA_RAMP_UNTIL, rampUntil),
+            )
         }
 
         /** Per i comandi inviati dall'interfaccia, che è in primo piano. */
@@ -88,6 +94,27 @@ class AlarmService : Service() {
         }
     }
 
+    // Suono crescente: il lettore sale di volume fino all'ora impostata, poi parte anche la vibrazione.
+    private var rampFrom = 0L
+    private var rampUntil = 0L
+
+    private fun rampVolume(): Float {
+        val left = rampUntil - System.currentTimeMillis()
+        if (left <= 0) return 1f
+        val f = 1f - left.toFloat() / (rampUntil - rampFrom)
+        // L'orecchio sente il volume in modo logaritmico: al quadrato la salita sembra regolare.
+        return 0.03f + 0.97f * f * f
+    }
+
+    private val ramp = object : Runnable {
+        override fun run() {
+            if (mode != Mode.RINGING) return
+            val v = rampVolume()
+            player?.setVolume(v, v)
+            if (v < 1f) handler.postDelayed(this, 1_000) else startVibration()
+        }
+    }
+
     private val escalate = Runnable { if (mode == Mode.CHECKING) startRinging() }
 
     override fun onCreate() {
@@ -99,7 +126,7 @@ class AlarmService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_RING -> startRinging()
+            ACTION_RING -> startRinging(intent.getLongExtra(EXTRA_RAMP_UNTIL, 0L))
             ACTION_CHECK -> if (mode == Mode.RINGING) goForeground() else startCheck()
             ACTION_MISSIONS_DONE -> finishRinging()
             ACTION_AWAKE_CONFIRMED -> if (mode == Mode.CHECKING) {
@@ -129,7 +156,7 @@ class AlarmService : Service() {
         return START_STICKY
     }
 
-    private fun startRinging() {
+    private fun startRinging(rampUntil: Long = 0L) {
         val wasRinging = mode == Mode.RINGING
         mode = Mode.RINGING
         AlarmPrefs(this).pendingRing = true
@@ -142,8 +169,10 @@ class AlarmService : Service() {
             stopTone()
             val prefs = AlarmPrefs(this)
             if (prefs.savedAlarmVolume < 0) prefs.savedAlarmVolume = audio.getStreamVolume(AudioManager.STREAM_ALARM)
+            rampFrom = System.currentTimeMillis()
+            this.rampUntil = rampUntil
             startSound()
-            startVibration()
+            ramp.run()
             handler.post(enforceVolume)
         }
         launchUi()
@@ -202,8 +231,10 @@ class AlarmService : Service() {
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        val candidates = listOf(RingtoneManager.TYPE_ALARM, RingtoneManager.TYPE_RINGTONE, RingtoneManager.TYPE_NOTIFICATION)
-            .mapNotNull { RingtoneManager.getActualDefaultRingtoneUri(this, it) }
+        // Il suono scelto per primo; se non si apre più (file cancellato) si ripiega su quelli del telefono.
+        val candidates = listOfNotNull(AlarmPrefs(this).soundUri?.let(Uri::parse)) +
+            listOf(RingtoneManager.TYPE_ALARM, RingtoneManager.TYPE_RINGTONE, RingtoneManager.TYPE_NOTIFICATION)
+                .mapNotNull { RingtoneManager.getActualDefaultRingtoneUri(this, it) }
         for (uri in candidates) {
             val mp = MediaPlayer()
             try {
@@ -212,6 +243,7 @@ class AlarmService : Service() {
                 mp.setDataSource(this, uri)
                 mp.isLooping = true
                 mp.prepare()
+                mp.setVolume(rampVolume(), rampVolume())
                 mp.start()
                 player = mp
                 return
@@ -220,6 +252,7 @@ class AlarmService : Service() {
             }
         }
         // Nessuna suoneria utilizzabile: tono di sistema.
+        // shortcut: il tono parte subito al massimo, senza salita; basta finché le suonerie del telefono funzionano.
         startToneLoop(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, volume = 100, everyMs = 1_000)
     }
 
@@ -289,25 +322,24 @@ class AlarmService : Service() {
 
     private fun buildNotification(): Notification {
         val nm = getSystemService(NotificationManager::class.java)
-        if (nm.getNotificationChannel(CHANNEL_ID) == null) {
-            val channel = NotificationChannel(CHANNEL_ID, "Sveglia", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Sveglia che suona"
-                setSound(null, null) // il suono lo gestisce il servizio
-                enableVibration(false)
-                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-                setBypassDnd(true)
-            }
-            nm.createNotificationChannel(channel)
+        // Ricrearlo ogni volta aggiorna nome e descrizione nella lingua scelta; il resto non cambia.
+        val channel = NotificationChannel(CHANNEL_ID, getString(R.string.channel_name), NotificationManager.IMPORTANCE_HIGH).apply {
+            description = getString(R.string.channel_description)
+            setSound(null, null) // il suono lo gestisce il servizio
+            enableVibration(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setBypassDnd(true)
         }
+        nm.createNotificationChannel(channel)
         val openUi = PendingIntent.getActivity(
             this, 0, AlarmActivity.intent(this),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val title = if (mode == Mode.CHECKING) "Sei sveglio? Conferma entro 60 secondi" else "Sveglia! Completa le missioni"
+        val title = getString(if (mode == Mode.CHECKING) R.string.notif_check else R.string.notif_ringing)
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
             .setContentTitle(title)
-            .setContentText("Tocca per aprire")
+            .setContentText(getString(R.string.notif_tap))
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

@@ -1,6 +1,5 @@
 package it.sveglia
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
@@ -12,8 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -126,7 +123,7 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = flag("Niente scorciatoie: completa le missioni")
+            override fun handleOnBackPressed() = flag(getString(R.string.no_shortcuts))
         })
     }
 
@@ -156,9 +153,9 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
         when (AlarmService.mode) {
             AlarmService.Mode.IDLE -> finish()
             AlarmService.Mode.CHECKING -> {
-                header.text = "Controllo"
-                title.text = "Anti-ricaduta"
-                subtitle.text = "Sei davvero sveglio? Se non confermi, la sveglia ricomincia da capo."
+                header.setText(R.string.header_check)
+                title.setText(R.string.check_title)
+                subtitle.setText(R.string.check_subtitle)
                 progressRow.visibility = View.GONE
                 checkPanel.visibility = View.VISIBLE
                 updateCountdown()
@@ -174,30 +171,30 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
             return
         }
         val mission = missions[MissionState.index]
-        header.text = "In partenza"
-        title.text = "Missione ${MissionState.index + 1} di ${missions.size}"
+        header.setText(R.string.header_departing)
+        title.text = getString(R.string.mission_n, MissionState.index + 1, missions.size)
         renderProgress(missions.size, MissionState.index)
         when (mission.type) {
             MissionType.MATH -> {
                 if (MissionState.problemText == null) MissionState.newProblem()
-                subtitle.text = "Risolvi il calcolo · ${MissionState.progress + 1} di ${mission.count}"
-                showFlaps(mathProblem, "${MissionState.problemText} =", 44f)
-                mathProblem.contentDescription = "${MissionState.problemText?.replace("×", "per")} uguale"
+                subtitle.text = getString(R.string.math_progress, MissionState.progress + 1, mission.count)
+                mathProblem.showFlaps("${MissionState.problemText} =", 44f)
+                mathProblem.contentDescription = getString(R.string.math_cd, MissionState.problemText?.replace("×", getString(R.string.times)))
                 mathAnswer.text.clear()
                 mathPanel.visibility = View.VISIBLE
                 mathAnswer.requestFocus()
                 WindowCompat.getInsetsController(window, mathAnswer).show(WindowInsetsCompat.Type.ime())
             }
             MissionType.SHAKE -> {
-                subtitle.text = "Scuoti forte il telefono"
-                showFlaps(shakeCounter, MissionState.progress.toString(), 88f)
-                shakeCounter.contentDescription = "${MissionState.progress} scosse"
-                shakeTotal.text = "Su ${mission.count}"
+                subtitle.setText(R.string.shake_hard)
+                shakeCounter.showFlaps(MissionState.progress.toString(), 88f)
+                shakeCounter.contentDescription = getString(R.string.shakes_cd, MissionState.progress)
+                shakeTotal.text = getString(R.string.out_of, mission.count)
                 shakePanel.visibility = View.VISIBLE
                 startShake()
             }
             MissionType.BARCODE -> {
-                subtitle.text = "Alzati e vai a scansionare il codice che hai registrato"
+                subtitle.setText(R.string.go_scan)
                 barcodePanel.visibility = View.VISIBLE
             }
         }
@@ -222,54 +219,6 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
                 else -> R.color.tile
             }
             progressRow.getChildAt(i).setBackgroundColor(ContextCompat.getColor(this, color))
-        }
-    }
-
-    /**
-     * Tabellone: ogni cifra su una tessera, gli operatori in giallo. Le tessere cambiate
-     * si ribaltano dall'alto come le palette Solari.
-     */
-    private fun showFlaps(container: LinearLayout, text: String, sizeSp: Float) {
-        val old = container.tag as? String
-        if (old == text) return
-        container.tag = text
-        container.removeAllViews()
-        val gap = (4 * resources.displayMetrics.density).toInt()
-        // Con caratteri di sistema grandi le tessere si restringono per stare in larghezza: un numero tagliato non si può risolvere.
-        val chars = text.filter { it != ' ' }
-        val units = chars.sumOf { if (it.isDigit()) 0.82 else 0.7 }.toFloat()
-        val room = (resources.displayMetrics.widthPixels - 40 * resources.displayMetrics.density - gap * chars.length) / units
-        val px = minOf(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp, resources.displayMetrics), room)
-        var index = 0
-        for ((i, ch) in text.withIndex()) {
-            if (ch == ' ') continue
-            val digit = ch.isDigit()
-            val view = if (digit) {
-                TextView(this, null, 0, R.style.Board_Flap).apply { setText(ch.toString()) }
-            } else {
-                TextView(this).apply {
-                    setText(ch.toString())
-                    setTextColor(ContextCompat.getColor(context, R.color.signal))
-                    fontVariationSettings = "'wght' 800"
-                    gravity = Gravity.CENTER
-                }
-            }
-            view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            view.setTextSize(TypedValue.COMPLEX_UNIT_PX, px)
-            val params = if (digit) {
-                LinearLayout.LayoutParams((px * 0.82f).toInt(), (px * 1.3f).toInt())
-            } else {
-                LinearLayout.LayoutParams((px * 0.7f).toInt(), (px * 1.3f).toInt())
-            }
-            if (container.childCount > 0) params.marginStart = gap
-            container.addView(view, params)
-            val changed = old?.getOrNull(i) != ch
-            if (digit && changed && ValueAnimator.areAnimatorsEnabled()) {
-                view.pivotY = 0f
-                view.scaleY = 0f
-                view.animate().scaleY(1f).setStartDelay(index * 35L).setDuration(170).start()
-            }
-            index++
         }
     }
 
@@ -301,7 +250,7 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
             MissionState.problemText = null
             advance(mission)
         } else {
-            flag("Sbagliato · nuovo calcolo")
+            flag(getString(R.string.wrong_answer))
             MissionState.newProblem()
             render()
         }
@@ -314,10 +263,10 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
                 if (mission?.type == MissionType.BARCODE && barcode.rawValue == prefs.barcodeValue) {
                     advance(mission)
                 } else {
-                    flag("Codice sbagliato")
+                    flag(getString(R.string.wrong_code))
                 }
             }
-            .addOnFailureListener { flag("Scansione non riuscita") }
+            .addOnFailureListener { flag(getString(R.string.scan_failed)) }
     }
 
     private fun startShake() {
@@ -350,8 +299,8 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
 
     private fun updateCountdown() {
         val left = ((AlarmService.checkDeadline - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
-        showFlaps(checkCountdown, "%02d".format(left), 88f)
-        checkCountdown.contentDescription = "$left secondi"
+        checkCountdown.showFlaps("%02d".format(left), 88f)
+        checkCountdown.contentDescription = getString(R.string.seconds_cd, left)
     }
 
     private fun allDone(total: Int) {
@@ -361,12 +310,12 @@ class AlarmActivity : AppCompatActivity(), SensorEventListener {
         shakePanel.visibility = View.GONE
         barcodePanel.visibility = View.GONE
         renderProgress(total, total)
-        header.text = "Arrivato"
-        title.text = "Buongiorno"
+        header.setText(R.string.header_arrived)
+        title.setText(R.string.good_morning)
         subtitle.text = if (prefs.wakeCheckEnabled) {
-            "Tra ${prefs.wakeCheckDelayMin} minuti controllo che tu sia ancora in piedi."
+            getString(R.string.done_check, prefs.wakeCheckDelayMin)
         } else {
-            "Missioni completate."
+            getString(R.string.done)
         }
         handler.postDelayed({ finish() }, 2_500)
     }

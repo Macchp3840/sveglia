@@ -2,6 +2,7 @@ package it.sveglia
 
 import android.Manifest
 import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -16,7 +17,6 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -37,6 +37,52 @@ fun AppCompatActivity.padForSystemBars() {
     }
 }
 
+/** Giorno e attesa della prossima sveglia con questi orari, es. ("lun", "8 h 12"). */
+fun Context.nextDeparture(hour: Int, minute: Int, days: Int): Pair<String, String> {
+    val next = AlarmScheduler.nextTrigger(hour, minute, days)
+    val cal = Calendar.getInstance().apply { timeInMillis = next }
+    val day = resources.getStringArray(R.array.week_short)[cal.get(Calendar.DAY_OF_WEEK) - 1]
+    val mins = ((next - System.currentTimeMillis() + 59_999) / 60_000).toInt()
+    val wait = if (mins >= 60) getString(R.string.wait_hours, mins / 60, mins % 60) else getString(R.string.wait_minutes, mins)
+    return day to wait
+}
+
+/** Mostra nel riquadro warningBox il primo permesso mancante che impedirebbe alla sveglia di funzionare bene. */
+fun AppCompatActivity.showPermissionWarning() {
+    val problem: Pair<String, Intent>? = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED ->
+            getString(R.string.warn_notifications) to appSettingsIntent()
+
+        !AlarmScheduler.canScheduleExact(this) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            getString(R.string.warn_exact) to
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName"))
+
+        Build.VERSION.SDK_INT >= 34 &&
+            !getSystemService(NotificationManager::class.java).canUseFullScreenIntent() ->
+            getString(R.string.warn_full_screen) to
+                Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:$packageName"))
+
+        else -> null
+    }
+    if (problem == null) {
+        findViewById<View>(R.id.warningBox).visibility = View.GONE
+    } else {
+        findViewById<TextView>(R.id.warningText).text = problem.first
+        findViewById<View>(R.id.warningBox).visibility = View.VISIBLE
+        findViewById<Button>(R.id.fixButton).setOnClickListener {
+            try {
+                startActivity(problem.second)
+            } catch (_: Exception) {
+                startActivity(appSettingsIntent())
+            }
+        }
+    }
+}
+
+private fun AppCompatActivity.appSettingsIntent() =
+    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+
 class MainActivity : AppCompatActivity() {
     private lateinit var prefs: AlarmPrefs
 
@@ -48,9 +94,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var minuteWheel: WheelPicker
     private lateinit var enabledSwitch: MaterialSwitch
     private lateinit var statusText: TextView
-    private lateinit var warningBox: View
-    private lateinit var warningText: TextView
-    private lateinit var fixButton: Button
     private lateinit var saveButton: Button
     private val dayChecks = mutableListOf<CheckBox>()
     private lateinit var mathCheck: CheckBox
@@ -62,9 +105,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wakeCheck: CheckBox
     private lateinit var wakeDelay: EditText
 
-    private val notificationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { updateWarnings() }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -75,9 +115,6 @@ class MainActivity : AppCompatActivity() {
         minuteWheel = findViewById(R.id.minuteWheel)
         enabledSwitch = findViewById(R.id.enabledSwitch)
         statusText = findViewById(R.id.statusText)
-        warningBox = findViewById(R.id.warningBox)
-        warningText = findViewById(R.id.warningText)
-        fixButton = findViewById(R.id.fixButton)
         saveButton = findViewById(R.id.saveButton)
         mathCheck = findViewById(R.id.mathCheck)
         mathCount = findViewById(R.id.mathCount)
@@ -89,15 +126,15 @@ class MainActivity : AppCompatActivity() {
         wakeDelay = findViewById(R.id.wakeDelay)
 
         hourWheel.count = 24
-        hourWheel.label = "Ore"
+        hourWheel.label = getString(R.string.hours)
         hourWheel.onValueChanged = { hour = it; renderStatus() }
         minuteWheel.count = 60
-        minuteWheel.label = "Minuti"
+        minuteWheel.label = getString(R.string.minutes)
         minuteWheel.onValueChanged = { minute = it; renderStatus() }
 
         val daysRow = findViewById<LinearLayout>(R.id.daysRow)
         val gap = (6 * resources.displayMetrics.density).toInt()
-        listOf("L" to "Lunedì", "M" to "Martedì", "M" to "Mercoledì", "G" to "Giovedì", "V" to "Venerdì", "S" to "Sabato", "D" to "Domenica")
+        resources.getStringArray(R.array.day_letters).zip(resources.getStringArray(R.array.day_names))
             .forEachIndexed { i, (label, name) ->
                 val cb = CheckBox(this, null, 0, R.style.Board_Day).apply {
                     text = label
@@ -112,7 +149,7 @@ class MainActivity : AppCompatActivity() {
 
         if (sensorsMissingAccelerometer()) {
             shakeCheck.isEnabled = false
-            shakeCheck.text = "Scuoti (sensore assente)"
+            shakeCheck.setText(R.string.shake_no_sensor)
         }
 
         loadFromPrefs()
@@ -124,18 +161,12 @@ class MainActivity : AppCompatActivity() {
         bindRow(wakeCheck, R.id.wakeRow, wakeDelay)
 
         findViewById<Button>(R.id.barcodeButton).setOnClickListener { registerBarcode() }
-        saveButton.setOnClickListener { save() }
+        saveButton.setOnClickListener { if (save()) finish() }
         findViewById<Button>(R.id.testButton).setOnClickListener {
             if (save()) {
                 AlarmScheduler.ringIn(this, 10_000)
-                say("Suonerà tra 10 secondi: blocca pure lo schermo")
+                say(getString(R.string.test_scheduled))
             }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -146,7 +177,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(AlarmActivity.intent(this))
             return
         }
-        updateWarnings()
+        showPermissionWarning()
         renderStatus()
     }
 
@@ -183,8 +214,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderBarcode() {
-        barcodeLabel.text = barcodeValue?.let { "Registrato: ${it.take(24)}" }
-            ?: "Es. il dentifricio o un QR attaccato in bagno"
+        barcodeLabel.text = barcodeValue?.let { getString(R.string.barcode_registered, it.take(24)) }
+            ?: getString(R.string.barcode_example)
     }
 
     private fun uiDays(): Int = dayChecks.foldIndexed(0) { i, acc, cb -> if (cb.isChecked) acc or (1 shl i) else acc }
@@ -192,18 +223,14 @@ class MainActivity : AppCompatActivity() {
     /** Cosa succederà con le impostazioni sullo schermo, anche prima di salvare. */
     private fun renderStatus() {
         if (!enabledSwitch.isChecked) {
-            statusText.text = "Spenta · accendila in alto"
+            statusText.setText(R.string.status_off)
             statusText.setTextColor(ContextCompat.getColor(this, R.color.ink_dim))
             return
         }
-        val next = AlarmScheduler.nextTrigger(hour, minute, uiDays())
-        val cal = Calendar.getInstance().apply { timeInMillis = next }
-        val day = listOf("dom", "lun", "mar", "mer", "gio", "ven", "sab")[cal.get(Calendar.DAY_OF_WEEK) - 1]
-        val mins = ((next - System.currentTimeMillis() + 59_999) / 60_000).toInt()
-        val wait = if (mins >= 60) "${mins / 60} h ${mins % 60}" else "$mins min"
+        val (day, wait) = nextDeparture(hour, minute, uiDays())
         val unsaved = hour != prefs.hour || minute != prefs.minute || uiDays() != prefs.days || !prefs.enabled
-        statusText.text = "Suona $day %02d:%02d · tra $wait".format(hour, minute) +
-            if (unsaved) " · premi Salva" else ""
+        val text = getString(R.string.status_rings, day, hour, minute, wait)
+        statusText.text = if (unsaved) getString(R.string.status_unsaved, text) else text
         statusText.setTextColor(ContextCompat.getColor(this, if (unsaved) R.color.signal else R.color.ink))
     }
 
@@ -212,15 +239,15 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener { barcode ->
                 val value = barcode.rawValue
                 if (value.isNullOrEmpty()) {
-                    say("Codice vuoto, riprova")
+                    say(getString(R.string.code_empty))
                 } else {
                     barcodeValue = value
                     barcodeCheck.isChecked = true
                     renderBarcode()
-                    say("Codice registrato: ricordati di premere Salva")
+                    say(getString(R.string.code_saved))
                 }
             }
-            .addOnFailureListener { say("Scansione non riuscita: ${it.message}") }
+            .addOnFailureListener { say(getString(R.string.scan_failed_reason, it.message)) }
     }
 
     private fun say(message: String) {
@@ -233,11 +260,11 @@ class MainActivity : AppCompatActivity() {
     /** Salva e ripianifica. Restituisce false se la configurazione non è valida. */
     private fun save(): Boolean {
         if (!mathCheck.isChecked && !shakeCheck.isChecked && !barcodeCheck.isChecked) {
-            say("Scegli almeno una missione")
+            say(getString(R.string.need_mission))
             return false
         }
         if (barcodeCheck.isChecked && barcodeValue == null) {
-            say("Registra prima un codice da scansionare")
+            say(getString(R.string.need_code))
             return false
         }
         prefs.hour = hour
@@ -257,44 +284,7 @@ class MainActivity : AppCompatActivity() {
 
         AlarmScheduler.scheduleFromPrefs(this)
         renderStatus()
-        updateWarnings()
-        say("Salvato")
+        showPermissionWarning()
         return true
     }
-
-    /** Mostra il primo permesso mancante che impedirebbe alla sveglia di funzionare bene. */
-    private fun updateWarnings() {
-        val problem: Pair<String, Intent>? = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED ->
-                "Senza notifiche la sveglia non può comparire sullo schermo." to appSettingsIntent()
-
-            !AlarmScheduler.canScheduleExact(this) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                "Serve il permesso per sveglie esatte, altrimenti potrebbe suonare in ritardo." to
-                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName"))
-
-            Build.VERSION.SDK_INT >= 34 &&
-                !getSystemService(NotificationManager::class.java).canUseFullScreenIntent() ->
-                "Serve il permesso per mostrare la sveglia a schermo intero." to
-                    Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:$packageName"))
-
-            else -> null
-        }
-        if (problem == null) {
-            warningBox.visibility = View.GONE
-        } else {
-            warningText.text = problem.first
-            warningBox.visibility = View.VISIBLE
-            fixButton.setOnClickListener {
-                try {
-                    startActivity(problem.second)
-                } catch (_: Exception) {
-                    startActivity(appSettingsIntent())
-                }
-            }
-        }
-    }
-
-    private fun appSettingsIntent() =
-        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
 }

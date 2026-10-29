@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="board_title">Partenze · Sveglia Dura</string>
+    <string name="alarm_on">Sveglia attiva</string>
+    <string name="fix">Risolvi</string>
+    <string name="days">Giorni</string>
+    <string name="days_none">Nessuno = una volta sola</string>
+    <string name="to_stop">Per spegnerla</string>
+    <string name="plat1">Bin 1</string>
+    <string name="plat2">Bin 2</string>
+    <string name="plat3">Bin 3</string>
+    <string name="ctrl">Ctrl</string>
+    <string name="math">Calcoli</string>
+    <string name="math_count">Quanti calcoli</string>
+    <string name="shake">Scuoti il telefono</string>
+    <string name="shake_count">Quante scosse</string>
+    <string name="shake_no_sensor">Scuoti (sensore assente)</string>
+    <string name="barcode">Codice lontano dal letto</string>
+    <string name="register">Registra</string>
+    <string name="wake_check">Sei sveglio? Dopo (min)</string>
+    <string name="wake_delay">Minuti prima del controllo</string>
+    <string name="test">Prova: suona tra 10 secondi</string>
+    <string name="save">Salva</string>
+    <string name="hours">Ore</string>
+    <string name="minutes">Minuti</string>
+    <string-array name="day_letters">
+        <item>L</item><item>M</item><item>M</item><item>G</item><item>V</item><item>S</item><item>D</item>
+    </string-array>
+    <string-array name="day_names">
+        <item>Lunedì</item><item>Martedì</item><item>Mercoledì</item><item>Giovedì</item><item>Venerdì</item><item>Sabato</item><item>Domenica</item>
+    </string-array>
+    <string-array name="week_short">
+        <item>dom</item><item>lun</item><item>mar</item><item>mer</item><item>gio</item><item>ven</item><item>sab</item>
+    </string-array>
+    <string name="test_scheduled">Suonerà tra 10 secondi: blocca pure lo schermo</string>
+    <string name="barcode_registered">Registrato: %s</string>
+    <string name="barcode_example">Es. il dentifricio o un QR attaccato in bagno</string>
+    <string name="status_off">Spenta · accendila in alto</string>
+    <string name="status_rings">Suona %1$s %2$02d:%3$02d · tra %4$s</string>
+    <string name="status_unsaved">%s · premi Salva</string>
+    <string name="wait_hours">%1$d h %2$02d</string>
+    <string name="wait_minutes">%d min</string>
+    <string name="code_empty">Codice vuoto, riprova</string>
+    <string name="code_saved">Codice registrato: ricordati di premere Salva</string>
+    <string name="scan_failed_reason">Scansione non riuscita: %s</string>
+    <string name="need_mission">Scegli almeno una missione</string>
+    <string name="need_code">Registra prima un codice da scansionare</string>
+    <string name="warn_notifications">Senza notifiche la sveglia non può comparire sullo schermo.</string>
+    <string name="warn_exact">Serve il permesso per sveglie esatte, altrimenti potrebbe suonare in ritardo.</string>
+    <string name="warn_full_screen">Serve il permesso per mostrare la sveglia a schermo intero.</string>
+
+    <string name="next_departure">Prossima partenza</string>
+    <string name="home_off">Spenta · premi Modifica per accenderla</string>
+    <string name="home_status">%1$s · tra %2$s</string>
+    <string name="detail_days">Giorni</string>
+    <string name="detail_missions">Missioni</string>
+    <string name="detail_check">Controllo</string>
+    <string name="detail_sound">Suono</string>
+    <string name="days_once">Una volta</string>
+    <string name="days_every">Tutti i giorni</string>
+    <string name="days_weekdays">Lun–Ven</string>
+    <string name="days_weekend">Weekend</string>
+    <string name="detail_math">Calcoli ×%d</string>
+    <string name="detail_shake">Scosse ×%d</string>
+    <string name="detail_code">Codice</string>
+    <string name="check_after">Dopo %d min</string>
+    <string name="check_off">No</string>
+    <string name="sound_ramp">%1$s · crescente %2$d min</string>
+    <string name="edit">Modifica</string>
+    <string name="settings">Impostazioni</string>
+
+    <string name="language">Lingua</string>
+    <string name="language_system">Lingua del telefono</string>
+    <string name="sound">Suono della sveglia</string>
+    <string name="sound_default">Predefinito del telefono</string>
+    <string name="pick_ringtone">Suonerie</string>
+    <string name="pick_file">File</string>
+    <string name="ramp">Suono crescente, minuti prima</string>
+    <string name="ramp_hint">Parte piano e arriva al massimo all\'ora impostata. 0 = subito al massimo.</string>
+
+    <string name="signature">Sveglia Dura %s · fatta da Macchp3840</string>
+
+    <string name="channel_name">Sveglia</string>
+    <string name="channel_description">Sveglia che suona</string>
+    <string name="notif_check">Sei sveglio? Conferma entro 60 secondi</string>
+    <string name="notif_ringing">Sveglia! Completa le missioni</string>
+    <string name="notif_tap">Tocca per aprire</string>
+
+    <string name="no_shortcuts">Niente scorciatoie: completa le missioni</string>
+    <string name="header_check">Controllo</string>
+    <string name="header_departing">In partenza</string>
+    <string name="header_arrived">Arrivato</string>
+    <string name="check_title">Anti-ricaduta</string>
+    <string name="check_subtitle">Sei davvero sveglio? Se non confermi, la sveglia ricomincia da capo.</string>
+    <string name="mission_n">Missione %1$d di %2$d</string>
+    <string name="math_progress">Risolvi il calcolo · %1$d di %2$d</string>
+    <string name="math_cd">%s uguale</string>
+    <string name="times">per</string>
+    <string name="shake_hard">Scuoti forte il telefono</string>
+    <string name="shakes_cd">%d scosse</string>
+    <string name="out_of">Su %d</string>
+    <string name="go_scan">Alzati e vai a scansionare il codice che hai registrato</string>
+    <string name="wrong_answer">Sbagliato · nuovo calcolo</string>
+    <string name="wrong_code">Codice sbagliato</string>
+    <string name="scan_failed">Scansione non riuscita</string>
+    <string name="seconds_cd">%d secondi</string>
+    <string name="good_morning">Buongiorno</string>
+    <string name="done_check">Tra %d minuti controllo che tu sia ancora in piedi.</string>
+    <string name="done">Missioni completate.</string>
+    <string name="confirm">Conferma</string>
+    <string name="code_lost">Non trovo il codice: 8 calcoli al suo posto</string>
+    <string name="scan_code">Scansiona il codice</string>
+    <string name="seconds_to_confirm">Secondi per confermare</string>
+    <string name="im_awake">Sono sveglio</string>
+</resources>

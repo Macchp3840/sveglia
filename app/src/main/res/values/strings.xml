@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="board_title">Departures · Sveglia Dura</string>
+    <string name="alarm_on">Alarm on</string>
+    <string name="fix">Fix</string>
+    <string name="days">Days</string>
+    <string name="days_none">None = once only</string>
+    <string name="to_stop">To turn it off</string>
+    <string name="plat1">Plat 1</string>
+    <string name="plat2">Plat 2</string>
+    <string name="plat3">Plat 3</string>
+    <string name="ctrl">Chk</string>
+    <string name="math">Math</string>
+    <string name="math_count">How many problems</string>
+    <string name="shake">Shake the phone</string>
+    <string name="shake_count">How many shakes</string>
+    <string name="shake_no_sensor">Shake (no sensor)</string>
+    <string name="barcode">Code far from bed</string>
+    <string name="register">Register</string>
+    <string name="wake_check">Awake check after (min)</string>
+    <string name="wake_delay">Minutes before the check</string>
+    <string name="test">Test: ring in 10 seconds</string>
+    <string name="save">Save</string>
+    <string name="hours">Hours</string>
+    <string name="minutes">Minutes</string>
+    <string-array name="day_letters">
+        <item>M</item><item>T</item><item>W</item><item>T</item><item>F</item><item>S</item><item>S</item>
+    </string-array>
+    <string-array name="day_names">
+        <item>Monday</item><item>Tuesday</item><item>Wednesday</item><item>Thursday</item><item>Friday</item><item>Saturday</item><item>Sunday</item>
+    </string-array>
+    <!-- Ordine di Calendar.DAY_OF_WEEK: domenica prima -->
+    <string-array name="week_short">
+        <item>Sun</item><item>Mon</item><item>Tue</item><item>Wed</item><item>Thu</item><item>Fri</item><item>Sat</item>
+    </string-array>
+    <string name="test_scheduled">Rings in 10 seconds: go ahead and lock the screen</string>
+    <string name="barcode_registered">Registered: %s</string>
+    <string name="barcode_example">E.g. the toothpaste or a QR taped in the bathroom</string>
+    <string name="status_off">Off · switch it on at the top</string>
+    <string name="status_rings">Rings %1$s %2$02d:%3$02d · in %4$s</string>
+    <string name="status_unsaved">%s · tap Save</string>
+    <string name="wait_hours">%1$d h %2$02d</string>
+    <string name="wait_minutes">%d min</string>
+    <string name="code_empty">Empty code, try again</string>
+    <string name="code_saved">Code registered: remember to tap Save</string>
+    <string name="scan_failed_reason">Scan failed: %s</string>
+    <string name="need_mission">Pick at least one mission</string>
+    <string name="need_code">Register a code to scan first</string>
+    <string name="warn_notifications">Without notifications the alarm can\'t show up on screen.</string>
+    <string name="warn_exact">The exact alarm permission is needed, otherwise it might ring late.</string>
+    <string name="warn_full_screen">The permission to show the alarm full screen is needed.</string>
+
+    <string name="next_departure">Next departure</string>
+    <string name="home_off">Off · tap Edit to switch it on</string>
+    <string name="home_status">%1$s · in %2$s</string>
+    <string name="detail_days">Days</string>
+    <string name="detail_missions">Missions</string>
+    <string name="detail_check">Check</string>
+    <string name="detail_sound">Sound</string>
+    <string name="days_once">Once</string>
+    <string name="days_every">Every day</string>
+    <string name="days_weekdays">Mon–Fri</string>
+    <string name="days_weekend">Weekend</string>
+    <string name="detail_math">Math ×%d</string>
+    <string name="detail_shake">Shake ×%d</string>
+    <string name="detail_code">Code</string>
+    <string name="check_after">After %d min</string>
+    <string name="check_off">Off</string>
+    <string name="sound_ramp">%1$s · rising %2$d min</string>
+    <string name="edit">Edit</string>
+    <string name="settings">Settings</string>
+
+    <string name="language">Language</string>
+    <string name="language_system">Phone language</string>
+    <string name="sound">Alarm sound</string>
+    <string name="sound_default">Phone default</string>
+    <string name="pick_ringtone">Ringtones</string>
+    <string name="pick_file">File</string>
+    <string name="ramp">Rising volume, minutes before</string>
+    <string name="ramp_hint">It starts quietly and reaches full volume at the set time. 0 = full volume straight away.</string>
+
+    <string name="signature">Sveglia Dura %s · made by Macchp3840</string>
+
+    <string name="channel_name">Alarm</string>
+    <string name="channel_description">Ringing alarm</string>
+    <string name="notif_check">Are you awake? Confirm within 60 seconds</string>
+    <string name="notif_ringing">Wake up! Complete the missions</string>
+    <string name="notif_tap">Tap to open</string>
+
+    <string name="no_shortcuts">No shortcuts: complete the missions</string>
+    <string name="header_check">Check</string>
+    <string name="header_departing">Departing</string>
+    <string name="header_arrived">Arrived</string>
+    <string name="check_title">Anti-relapse</string>
+    <string name="check_subtitle">Are you really awake? If you don\'t confirm, the alarm starts over.</string>
+    <string name="mission_n">Mission %1$d of %2$d</string>
+    <string name="math_progress">Solve it · %1$d of %2$d</string>
+    <string name="math_cd">%s equals</string>
+    <string name="times">times</string>
+    <string name="shake_hard">Shake the phone hard</string>
+    <string name="shakes_cd">%d shakes</string>
+    <string name="out_of">Out of %d</string>
+    <string name="go_scan">Get up and go scan the code you registered</string>
+    <string name="wrong_answer">Wrong · new problem</string>
+    <string name="wrong_code">Wrong code</string>
+    <string name="scan_failed">Scan failed</string>
+    <string name="seconds_cd">%d seconds</string>
+    <string name="good_morning">Good morning</string>
+    <string name="done_check">In %d minutes I\'ll check you\'re still up.</string>
+    <string name="done">Missions complete.</string>
+    <string name="confirm">Confirm</string>
+    <string name="code_lost">Can\'t find the code: 8 problems instead</string>
+    <string name="scan_code">Scan the code</string>
+    <string name="seconds_to_confirm">Seconds to confirm</string>
+    <string name="im_awake">I\'m awake</string>
+</resources>

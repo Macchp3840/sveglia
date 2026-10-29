@@ -49,6 +49,23 @@ class AlarmPrefs(context: Context) {
         get() = sp.getInt("wake_check_delay", 5)
         set(v) = sp.edit().putInt("wake_check_delay", v).apply()
 
+    /** Suono scelto (suoneria o file), null = quello predefinito del telefono. */
+    var soundUri: String?
+        get() = sp.getString("sound_uri", null)
+        set(v) = sp.edit().putString("sound_uri", v).apply()
+
+    /** Minuti di suono crescente prima dell'ora impostata, 0 = subito al massimo. */
+    var rampMinutes: Int
+        get() = sp.getInt("ramp_minutes", 3)
+        set(v) = sp.edit().putInt("ramp_minutes", v).apply()
+
+    /** Ora impostata dell'ultima sveglia partita: durante il suono crescente è ancora nel futuro. */
+    var firedAt: Long
+        get() = sp.getLong("fired_at", 0L)
+        set(v) {
+            sp.edit().putLong("fired_at", v).commit()
+        }
+
     /** true finché la sveglia suona e le missioni non sono completate (sopravvive al riavvio). */
     var pendingRing: Boolean
         get() = sp.getBoolean("pending_ring", false)

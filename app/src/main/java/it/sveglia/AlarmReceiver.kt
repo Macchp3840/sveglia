@@ -15,10 +15,12 @@ class AlarmReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_FIRE -> {
                 val prefs = AlarmPrefs(context)
+                val at = intent.getLongExtra(AlarmScheduler.EXTRA_AT, 0L)
+                prefs.firedAt = at
                 if (prefs.days == 0) prefs.enabled = false
                 AlarmScheduler.cancelWakeCheck(context)
                 AlarmScheduler.scheduleFromPrefs(context)
-                AlarmService.start(context, AlarmService.ACTION_RING)
+                AlarmService.start(context, AlarmService.ACTION_RING, rampUntil = at)
             }
             ACTION_RING_NOW -> AlarmService.start(context, AlarmService.ACTION_RING)
             // wakeCheckAt resta impostato finché non confermi: se il telefono si riavvia, il controllo riparte.

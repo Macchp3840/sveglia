@@ -11,6 +11,8 @@ object AlarmScheduler {
     private const val REQ_MAIN = 100
     private const val REQ_WAKE_CHECK = 101
     private const val REQ_RING_NOW = 102
+    const val MAX_RAMP_MINUTES = 5
+    const val EXTRA_AT = "at"
 
     /** Prossimo istante (ms) in cui la sveglia deve suonare. */
     fun nextTrigger(hour: Int, minute: Int, days: Int, now: Long = System.currentTimeMillis()): Long {
@@ -52,8 +54,13 @@ object AlarmScheduler {
             context.getSystemService(AlarmManager::class.java).cancel(mainOperation(context))
             return null
         }
-        val time = nextTrigger(prefs.hour, prefs.minute, prefs.days)
-        setAlarm(context, time, mainOperation(context))
+        // Una sveglia già partita non va ripianificata: durante il suono crescente la sua ora è ancora davanti.
+        // Solo se recente, così un orologio spostato indietro non fa saltare un giorno.
+        val now = System.currentTimeMillis()
+        val fired = prefs.firedAt.takeIf { it - now <= MAX_RAMP_MINUTES * 60_000L } ?: 0L
+        val time = nextTrigger(prefs.hour, prefs.minute, prefs.days, maxOf(now, fired))
+        // shortcut: il sistema mostra come "prossima sveglia" l'inizio del suono crescente, non l'ora impostata.
+        setAlarm(context, time - prefs.rampMinutes * 60_000L, mainOperation(context, time))
         return time
     }
 
@@ -76,7 +83,7 @@ object AlarmScheduler {
     private fun setAlarm(context: Context, time: Long, operation: PendingIntent) {
         val am = context.getSystemService(AlarmManager::class.java)
         val show = PendingIntent.getActivity(
-            context, 0, Intent(context, MainActivity::class.java),
+            context, 0, Intent(context, HomeActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         try {
@@ -87,14 +94,15 @@ object AlarmScheduler {
         }
     }
 
-    private fun mainOperation(context: Context) = operation(context, AlarmReceiver.ACTION_FIRE, REQ_MAIN)
+    /** [at]: ora impostata, arriva al receiver per far salire il volume fin lì (per cancellare non conta). */
+    private fun mainOperation(context: Context, at: Long = 0L) = operation(context, AlarmReceiver.ACTION_FIRE, REQ_MAIN, at)
 
     private fun wakeCheckOperation(context: Context) = operation(context, AlarmReceiver.ACTION_WAKE_CHECK, REQ_WAKE_CHECK)
 
-    private fun operation(context: Context, action: String, requestCode: Int): PendingIntent =
+    private fun operation(context: Context, action: String, requestCode: Int, at: Long = 0L): PendingIntent =
         PendingIntent.getBroadcast(
             context, requestCode,
-            Intent(context, AlarmReceiver::class.java).setAction(action),
+            Intent(context, AlarmReceiver::class.java).setAction(action).putExtra(EXTRA_AT, at),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 }
