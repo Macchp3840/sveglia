@@ -26,6 +26,7 @@ A normal alarm loses to a half-asleep thumb. Sveglia Dura (Italian for "tough al
 | **Barcode / QR mission** | Register a code far from your bed (toothpaste, coffee, a QR taped in the bathroom). To stop the alarm you have to walk there and scan it. This is the mission that works best. |
 | **Rising volume** | It starts a few minutes early (3 by default, 0 to 5) almost silent and reaches full volume exactly at the set time. Vibration starts at the set time. |
 | **Your own sound** | Any ringtone on the phone or an audio file. If the file disappears, it falls back to the phone's alarm sound. |
+| **Out loud, even with headphones** | With wired or Bluetooth headphones connected, the alarm still plays from the phone's speaker (Android 9 and newer). |
 | **Locked volume** | The alarm volume is pushed back to maximum every second, even if you turn it down. |
 | **No snooze, no Back** | Back doesn't close the screen. Leaving with Home keeps it ringing. |
 | **Anti-relapse check** | A few minutes after you stop it, it asks "Are you awake?". No answer within 60 seconds and it rings again, missions included. |

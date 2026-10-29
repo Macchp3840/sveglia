@@ -26,6 +26,7 @@ Una sveglia normale perde contro un pollice mezzo addormentato. Sveglia Dura è 
 | **Missione codice a barre / QR** | Registri un codice lontano dal letto (dentifricio, caffè, QR attaccato in bagno). Per spegnere la sveglia devi andare lì a scansionarlo. È la missione che funziona meglio. |
 | **Suono crescente** | Parte qualche minuto prima (3 di default, da 0 a 5) quasi in silenzio e arriva al massimo esattamente all'ora impostata. La vibrazione parte all'ora impostata. |
 | **Il tuo suono** | Una qualsiasi suoneria del telefono oppure un file audio. Se il file sparisce, usa il suono di sveglia del telefono. |
+| **Dall'altoparlante anche con le cuffie** | Con cuffie a filo o Bluetooth collegate, la sveglia suona comunque dall'altoparlante del telefono (da Android 9). |
 | **Volume bloccato** | Il volume della sveglia viene riportato al massimo ogni secondo, anche se lo abbassi. |
 | **Niente snooze, niente tasto indietro** | Il tasto indietro non chiude la schermata. Se esci con Home, la sveglia continua a suonare. |
 | **Controllo anti-ricaduta** | Qualche minuto dopo averla spenta ti chiede "Sei sveglio?". Se non rispondi entro 60 secondi, ricomincia a suonare con tutte le missioni. |

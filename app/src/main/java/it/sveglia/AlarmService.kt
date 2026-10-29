@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
@@ -240,6 +241,13 @@ class AlarmService : Service() {
             try {
                 mp.setAudioAttributes(attrs)
                 mp.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK)
+                // Anche con cuffie o Bluetooth collegati deve suonare dall'altoparlante, non nelle orecchie di chi dorme.
+                // shortcut: sotto Android 9 non si può scegliere l'uscita, decide il sistema.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                        .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+                        ?.let { mp.setPreferredDevice(it) }
+                }
                 mp.setDataSource(this, uri)
                 mp.isLooping = true
                 mp.prepare()
