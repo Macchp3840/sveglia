@@ -11,8 +11,8 @@ android {
         applicationId = "it.sveglia"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.1.0"
+        versionCode = 4
+        versionName = "1.1.1"
     }
 
     // La chiave di firma non sta nella repo: arriva da variabili d'ambiente (secrets su GitHub).
